@@ -1,0 +1,35 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block navbar %}
+
+{% include 'components/navbar.html' %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="section">
+    <div class="horizontal-container">
+        <div class="title">{{ offer.name }}</div>
+        <img class="image" src="{{ offer.imageUrl }}" alt="Image">
+    </div>
+    {% comment %} <div class="content-header">О курсе</div> {% endcomment %}
+    <div class="content">
+        <div class="content-value">-{{ offer.description }}</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-Обслуживание:&nbsp;{{ offer.instructor }}&nbsp;руб./мес.</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-Кэшбэк до&nbsp;{{ offer.cashback }}&nbsp;процентов</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-Выпускается на&nbsp;{{ offer.duration }}&nbsp;года</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-{{ offer.bonus }}</div>
+    </div>
+</div>
+
+{% endblock %}

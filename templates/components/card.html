@@ -1,0 +1,19 @@
+{% load static %}
+
+<div class="card">
+    <div class="card-image-container">
+        <img src="{{ offer.imageUrl }}" alt="Image">
+    </div>
+
+    <div class="card-content">
+        <div class="card-date">
+            <div class="card-title">{{ offer.name }}</div>
+            <div class="card-location">Обслуживание:&nbsp;{{ offer.subscription }}&nbsp;руб./мес.</div>
+            <div class="card-location">Кэшбэк до&nbsp;{{ offer.cashback }}%</div>
+        </div>
+
+        <button class="card-button" onClick="location.href='{% url 'offer' offer_id=offer.id %}'">
+            Подробнее
+        </button>
+    </div>
+</div>

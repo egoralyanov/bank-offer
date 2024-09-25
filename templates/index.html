@@ -1,0 +1,41 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block navbar %}
+
+{% include 'components/navbar.html' %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="top-container">
+    <div class="title">Услуги Банка частным лицам</div>
+
+    <div class="horizontal-container">
+        <form method="GET" action="">
+            <input class="search-bar" type="text" name="offer_name" placeholder="Поиск по названию" value="{{ request.GET.offer_name }}">
+        </form>
+
+        <div class="button-container">
+            <button class="button" onClick="location.href='{% url 'application' application.id %}'">
+                Заявка
+                <div class="badge">
+                    <div class="background">
+                        {{ application_offers_counter }}
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-container">
+    {% for offer in offers %}
+            {% include 'components/card.html' %}
+        {% empty %}
+            <div>Такой услуги не существует</div>
+    {% endfor %}
+</div>
+
+{% endblock %}
