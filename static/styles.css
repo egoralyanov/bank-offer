@@ -344,3 +344,23 @@ main>.container {
 }
 
 /* section */
+
+/* delete-button */
+
+.delete-button-container {
+    position: relative;
+}
+
+.delete-button {
+    position: relative;
+    padding: 16px 25px;
+    border-radius: 16px;
+    cursor: pointer;
+    border: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    background-color: #EB3333;
+    color: white;
+}
+
+/* delete-button */

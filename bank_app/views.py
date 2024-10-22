@@ -103,7 +103,7 @@ def set_application_deleted(request, application_id):
     priorities_counter = Comment.objects.filter(application=application).count()
 
     with connection.cursor() as cursor:
-        cursor.execute("UPDATE application SET status = 'deleted', number_of_sections = %s WHERE id = %s", [priorities_counter, application_id])
+        cursor.execute("UPDATE application SET status = 'deleted', number_of_services = %s WHERE id = %s", [priorities_counter, application_id])
         print("Заявка удалена.")
         
     return redirect('index')
