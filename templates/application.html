@@ -16,7 +16,7 @@
 <input class="fio-input" type="text" placeholder="Введите ОГРН и название компании" value="{{ psrn_and_company_name }}">
 
 <div class="application-grid">
-{% for item in bank_offers %}
+{% for item in offers %}
 {% include 'components/row.html' %}
 {% endfor %}
 </div>

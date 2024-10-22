@@ -1,101 +1,109 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.decorators.http import require_POST, require_GET
 
-bank_offers = [
-  {
-    "id": 1,
-    "name": "РКО",
-    "description": "РКО необходимо, чтобы проводить операции по получению и переводу денежных средств контрагентам, в бюджет, сотрудникам",
-    "fact": 'Бухгалтерия для бизнеса',
-    "cost": 100,
-    "bonus": "Бонусы за открытие расчетного счета: скидки на бухгалтерские услуги и бесплатные переводы между счетами",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/1.png'
-  },
-  {
-    "id": 2,
-    "name": "Эквайринг",
-    "description": "Подключение эквайринга для малого и среднего бизнеса – это возможность принимать безналичную оплату в торговых точках, при доставке, в интернете",
-    "fact": 'Бесплатное подключение',
-    "cost": 100,
-    "bonus": "Услуги карт платежных систем МИР, Visa, Mastercard и UnionPay, выпущенные российскими эмитентами",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/2.png'
-  },
-  {
-    "id": 3,
-    "name": "Зарплатный проект",
-    "description": "Надежный инструмент для экономии времени и ресурсов, а также повышения лояльности сотрудников вашей компании",
-    "fact": 'Моментальный выпуск карт',
-    "cost": 100,
-    "bonus": "Интеграция с любой учетной системой клиента",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/3.png'
-  }
-]
+from django.http import Http404
 
-mock_bank_application = {
-  'id': 1,
-  'psrn_and_company_name': '',
-  'bank_offers': [
-    {
-      'id': 1,
-      'id_bank_application': 1,
-      'id_bank_offer': 1,
-      'comment': 'Валюта: рубль'
-    },
-    {
-      'id': 2,
-      'id_bank_application': 1,
-      'id_bank_offer': 2,
-      'comment': 'Нет комментария'
-    },
-    {
-      'id': 3,
-      'id_bank_application': 1,
-      'id_bank_offer': 3,
-      'comment': '5 сотрудников'
-    }
-  ]
-}
+from django.db import connection
 
+from django.contrib.auth.models import User
+from bank_app.models import BankOffer, BankApplication, Comment
+
+
+@require_GET
 def index(request):
-    search_query = request.GET.get('bank_offer_name', '')
-    filtered_offers = [offer for offer in bank_offers if search_query.lower() in offer['name'].lower()]
-    bank_application_offers_counter = len(mock_bank_application['bank_offers'])
+    search_query = request.GET.get('offer_name', '')
+    all_offers = BankOffer.objects.filter(is_deleted=False)
+       
+    if search_query:
+       all_offers = all_offers.filter(name=search_query)
+
+    default_user = User.objects.get(id=2) # id = 1 is superuser
+    user_applications = BankApplication.objects.filter(user=default_user)
+    draft_application = user_applications.filter(status='draft').first()
+
+    priorities = Comment.objects.filter(application=draft_application)
+    application_offers_size = 0
+    for priority in priorities:
+        if priority.offer.is_deleted is False:
+           application_offers_size += 1
     
     context = {
-        'bank_offers': filtered_offers,
-        'bank_application': mock_bank_application,
-        'bank_application_offers_counter': bank_application_offers_counter
+        'offers': all_offers,
+        'application': draft_application,
+        'application_offers_counter': application_offers_size
     }
     return render(request, 'index.html', context)
 
-def bank_offer(request, bank_offer_id):
-    searched_bank_offer = None
-    for bank_offer in bank_offers:
-      if bank_offer['id'] == bank_offer_id:
-        searched_bank_offer = bank_offer
-        break
+
+@require_GET
+def offer(request, offer_id):
+    searched_offer = get_object_or_404(BankOffer, pk=offer_id)
     
-    if searched_bank_offer == None:
-      return
+    if searched_offer.is_deleted == True:
+      return Http404("Услуга удалена")
     
     context = {
-        'bank_offer': searched_bank_offer
+        'offer': searched_offer
     }
-    return render(request, 'bank_offer.html', context)
+    return render(request, 'offer.html', context)
 
-def bank_application(request, bank_application_id):
-    result_bank_offers = []
 
-    for bank_offer in mock_bank_application['bank_offers']:
-      for offer in bank_offers:
-        if bank_offer['id'] == offer['id']:
-            result_bank_offers.append({ 'bank_offer': offer, 'comment': bank_offer['comment'] })
-            break
+@require_GET
+def application(request, application_id):
+    application = get_object_or_404(BankApplication, pk=application_id)
+
+    if application.status != 'draft':
+       raise Http404("Заявка не доступна для редактирования")
+
+    priorities = Comment.objects.filter(application=application)
+
+    application_sections = []
+    for priority in priorities:
+      if priority.offer.is_deleted is False:
+        application_sections.append({ 'offer': priority.offer, 'comment': priority.comment })
+
+    psrn_and_company_name = ''
+    if application.psrn_and_company_name is not None:
+       psrn_and_company_name = application.psrn_and_company_name
 
     context = {
-      'id': mock_bank_application['id'],
-      'psrn_and_company_name': mock_bank_application['psrn_and_company_name'],
-      'bank_offers': result_bank_offers,
+      'id': application.id,
+      'psrn_and_company_name': psrn_and_company_name,
+      'offers': application_sections,
     }
 
-    return render(request, 'bank_application.html', context)
+    return render(request, 'application.html', context)
 
+
+@require_POST
+def add_offer(request, offer_id):
+    default_user = User.objects.get(id=2) # id = 1 is superuser
+    user_applications = BankApplication.objects.filter(user=default_user)
+    draft_application = user_applications.filter(status='draft').first()
+
+    chosen_offer = BankOffer.objects.get(pk=offer_id)
+
+    if not draft_application:
+        draft_application = BankApplication.objects.create(user=default_user, status='draft')
+
+    priorities = Comment.objects.filter(application=draft_application)
+
+    if priorities.filter(offer=chosen_offer):
+       print('Эта услуга уже добавлена в заявку')
+       return redirect('index')
+    
+    Comment.objects.create(application=draft_application, offer=chosen_offer)
+
+    return redirect('index')
+
+
+@require_POST
+def set_application_deleted(request, application_id):
+    application = BankApplication.objects.get(id=application_id)
+    priorities_counter = Comment.objects.filter(application=application).count()
+
+    with connection.cursor() as cursor:
+        cursor.execute("UPDATE application SET status = 'deleted', number_of_sections = %s WHERE id = %s", [priorities_counter, application_id])
+        print("Заявка удалена.")
+        
+    return redirect('index')

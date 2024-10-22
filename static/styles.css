@@ -13,10 +13,6 @@ a {
     text-decoration: none;
 }
 
-a:hover {
-    box-shadow: rgba(0, 0, 0, 0.04) 0px 3px 13px, rgba(0, 0, 0, 0.19) 0px 10.5px 36px;
-}
-
 body {
     background-color: #F3F7FA;
 }
@@ -78,11 +74,8 @@ main>.container {
 }
 
 .card img {
-    /* width: 100%; */
     width: 184px;
     height: 97px;
-    /* border-top-left-radius: 8px;
-    border-top-right-radius: 8px; */
     object-fit: cover;
     margin-top: 22px;
 }
@@ -114,14 +107,25 @@ main>.container {
     padding-bottom: 10px;
 }
 
-.card-button {
-    padding: 12px 36px;
+.card-button-details {
+    padding: 10px 14px;
     border-radius: 8px;
     cursor: pointer;
     border: #fff;
     font-weight: bold;
     background: linear-gradient(90deg, rgb(0, 55, 255) 0%, rgb(0, 133, 255) 75%);
     color: white;
+}
+
+.card-button-add {
+    margin-left: 24px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    background: #F3F7FA;
+    color: #0A2896;
+    border-color: rgba(10, 40, 150, 0.2);
 }
 
 /* card */
@@ -205,7 +209,8 @@ main>.container {
     padding-top: 16px;
     padding-bottom: 16px;
     padding-left: 28px;
-    padding-right: 281px;
+    width: 300px;
+    padding-right: 28px;
     border-radius: 8px;
     border: #fff;
 }
@@ -232,7 +237,6 @@ main>.container {
     width: 100%;
     border-radius: 8px;
     background-color: white;
-    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
 }
 
 .application-cell .image {
@@ -252,7 +256,7 @@ main>.container {
 }
 
 .application-cell .position-container {
-    margin-right: 32px;
+    margin-right: 600px;
 }
 
 .application-cell .position {
@@ -260,6 +264,15 @@ main>.container {
     top: 50%;
     -ms-transform: translateY(-50%);
     transform: translateY(-50%);
+
+    padding-top: 16px;
+    padding-bottom: 16px;
+    padding-left: 28px;
+    width: 500px;
+    padding-right: 28px;
+    border-radius: 8px;
+    border: #fff;
+    background-color: #f0f0f0;
 }
 
 /* application-cell */
@@ -273,7 +286,8 @@ main>.container {
     padding-top: 16px;
     padding-bottom: 16px;
     padding-left: 28px;
-    padding-right: 584px;
+    width: 500px;
+    padding-right: 28px;
     border-radius: 8px;
     border: #fff;
 }
@@ -305,8 +319,6 @@ main>.container {
     text-align: center;
     font-size: 32px;
     font-weight: bold;
-    /* margin-top: 30px;
-    margin-bottom: 30px; */
     color: #9EADD4;
 }
 

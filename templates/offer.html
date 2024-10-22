@@ -1,0 +1,31 @@
+{% extends 'layout/base.html' %}
+{% load static %}
+
+{% block navbar %}
+
+{% include 'components/navbar.html' %}
+
+{% endblock %}
+
+{% block content %}
+
+<div class="section">
+    <div class="horizontal-container">
+        <div class="title">{{ offer.name }}</div>
+        <img class="image" src="{{ offer.imageUrl }}" alt="Image">
+    </div>
+    <div class="content">
+        <div class="content-value">-{{ offer.description }}</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-{{ offer.fact }}</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-{{ offer.bonus }}</div>
+    </div>
+    <div class="content">
+        <div class="content-value">-Стоимость:&nbsp;{{ offer.cost }}&nbsp;руб./мес.</div>
+    </div>
+</div>
+
+{% endblock %}
