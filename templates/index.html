@@ -14,15 +14,15 @@
 
     <div class="horizontal-container">
         <form method="GET" action="">
-            <input class="search-bar" type="text" name="offer_name" placeholder="Поиск по названию" value="{{ request.GET.offer_name }}">
+            <input class="search-bar" type="text" name="bank_offer_name" placeholder="Поиск по названию" value="{{ request.GET.bank_offer_name }}">
         </form>
 
         <div class="button-container">
-            <button class="button" onClick="location.href='{% url 'application' application.id %}'">
+            <button class="button" onClick="location.href='{% url 'bank_application' bank_application.id %}'">
                 Заявка
                 <div class="badge">
                     <div class="background">
-                        {{ application_offers_counter }}
+                        {{ bank_application_offers_counter }}
                     </div>
                 </div>
             </button>
@@ -31,7 +31,7 @@
 </div>
 
 <div class="grid-container">
-    {% for offer in offers %}
+    {% for bank_offer in bank_offers %}
             {% include 'components/card.html' %}
         {% empty %}
             <div>Такой услуги не существует</div>

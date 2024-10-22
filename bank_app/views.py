@@ -1,133 +1,101 @@
 from django.shortcuts import render
 
-offers = [
+bank_offers = [
   {
     "id": 1,
-    "name": "Дебетовая карта",
-    "description": "Карта для повседневных покупок с выгодными условиями обслуживания",
-    "cashback": 5,
-    "duration": 3,
-    "subscription": 100,
-    "bonus": "Бонусы у партнеров: скидки в магазинах, кафе и на автозаправках",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/debit.png'
+    "name": "РКО",
+    "description": "РКО необходимо, чтобы проводить операции по получению и переводу денежных средств контрагентам, в бюджет, сотрудникам",
+    "fact": 'Бухгалтерия для бизнеса',
+    "cost": 100,
+    "bonus": "Бонусы за открытие расчетного счета: скидки на бухгалтерские услуги и бесплатные переводы между счетами",
+    'imageUrl': 'http://127.0.0.1:9000/bank-offer/1.png'
   },
   {
     "id": 2,
-    "name": "Кредитная карта",
-    "description": "Удобный инструмент для получения краткосрочных кредитов с гибкими условиями погашения",
-    "cashback": 10,
-    "duration": 2,
-    "subscription": 250,
-    "bonus": "Предоставляет льготный период на покупки до 50 дней",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/credit.png'
+    "name": "Эквайринг",
+    "description": "Подключение эквайринга для малого и среднего бизнеса – это возможность принимать безналичную оплату в торговых точках, при доставке, в интернете",
+    "fact": 'Бесплатное подключение',
+    "cost": 100,
+    "bonus": "Услуги карт платежных систем МИР, Visa, Mastercard и UnionPay, выпущенные российскими эмитентами",
+    'imageUrl': 'http://127.0.0.1:9000/bank-offer/2.png'
   },
   {
     "id": 3,
-    "name": "Премиальная карта",
-    "description": "Эксклюзивная карта с привилегиями для путешествий и бизнеса",
-    "cashback": 20,
-    "duration": 2,
-    "subscription": 500,
-    "bonus": "Доступ в бизнес-залы аэропортов и премиальные программы лояльности",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/premium.png'
-  },
-  {
-    "id": 4,
-    "name": "Социальная карта",
-    "description": "Карта для жителей города с привилегиями и льготами",
-    "cashback": 7,
-    "duration": 3,
-    "subscription": 0,
-    "bonus": "Бесплатный проезд в общественном транспорте и скидки в муниципальных учреждениях",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/social.png'
-  },
-  {
-    "id": 5,
-    "name": "Детская карта",
-    "description": "Карта для детей с возможностью родительского контроля расходов",
-    "cashback": 15,
-    "duration": 2,
-    "subscription": 0,
-    "bonus": "Позволяет родителям контролировать траты ребенка и устанавливать лимиты",
-    'imageUrl': 'http://127.0.0.1:9000/bank-offer/kids.png'
+    "name": "Зарплатный проект",
+    "description": "Надежный инструмент для экономии времени и ресурсов, а также повышения лояльности сотрудников вашей компании",
+    "fact": 'Моментальный выпуск карт',
+    "cost": 100,
+    "bonus": "Интеграция с любой учетной системой клиента",
+    'imageUrl': 'http://127.0.0.1:9000/bank-offer/3.png'
   }
 ]
 
-mock_application = {
+mock_bank_application = {
   'id': 1,
-  'fio': '',
-  'offer_priority': [
+  'psrn_and_company_name': '',
+  'bank_offers': [
     {
       'id': 1,
-      'id_application': 1,
-      'id_offer': 1,
-      'priority_number': 1
+      'id_bank_application': 1,
+      'id_bank_offer': 1,
+      'comment': 'Валюта: рубль'
     },
     {
       'id': 2,
-      'id_application': 1,
-      'id_offer': 2,
-      'priority_number': 3
+      'id_bank_application': 1,
+      'id_bank_offer': 2,
+      'comment': 'Нет комментария'
     },
     {
       'id': 3,
-      'id_application': 1,
-      'id_offer': 3,
-      'priority_number': 2
-    },
-    {
-      'id': 4,
-      'id_application': 1,
-      'id_offer': 5,
-      'priority_number': 4
+      'id_bank_application': 1,
+      'id_bank_offer': 3,
+      'comment': '5 сотрудников'
     }
   ]
 }
 
 def index(request):
-    search_query = request.GET.get('offer_name', '')
-    filtered_offers = [offer for offer in offers if search_query.lower() in offer['name'].lower()]
-    application_offers_size = len(mock_application['offer_priority'])
+    search_query = request.GET.get('bank_offer_name', '')
+    filtered_offers = [offer for offer in bank_offers if search_query.lower() in offer['name'].lower()]
+    bank_application_offers_counter = len(mock_bank_application['bank_offers'])
     
     context = {
-        'offers': filtered_offers,
-        'application': mock_application,
-        'application_offers_counter': application_offers_size
+        'bank_offers': filtered_offers,
+        'bank_application': mock_bank_application,
+        'bank_application_offers_counter': bank_application_offers_counter
     }
     return render(request, 'index.html', context)
 
-def offer(request, offer_id):
-    searched_offer = None
-    for offer in offers:
-      if offer['id'] == offer_id:
-        searched_offer = offer
+def bank_offer(request, bank_offer_id):
+    searched_bank_offer = None
+    for bank_offer in bank_offers:
+      if bank_offer['id'] == bank_offer_id:
+        searched_bank_offer = bank_offer
         break
     
-    if searched_offer == None:
+    if searched_bank_offer == None:
       return
     
     context = {
-        'offer': searched_offer
+        'bank_offer': searched_bank_offer
     }
-    return render(request, 'offer.html', context)
+    return render(request, 'bank_offer.html', context)
 
-def application(request, application_id):
-    sorted_offers_order = sorted(mock_application['offer_priority'], key=lambda dict: dict['priority_number'])
+def bank_application(request, bank_application_id):
+    result_bank_offers = []
 
-    sorted_offers = []
-    index = 0
-    for sorted_offer_order in sorted_offers_order:
-      index += 1
-      for offer in offers:
-        if sorted_offer_order['id'] == offer['id']:
-            sorted_offers.append({ 'offer': offer, 'index': index })
+    for bank_offer in mock_bank_application['bank_offers']:
+      for offer in bank_offers:
+        if bank_offer['id'] == offer['id']:
+            result_bank_offers.append({ 'bank_offer': offer, 'comment': bank_offer['comment'] })
             break
 
     context = {
-      'id': mock_application['id'],
-      'fio': mock_application['fio'],
-      'offers': sorted_offers,
+      'id': mock_bank_application['id'],
+      'psrn_and_company_name': mock_bank_application['psrn_and_company_name'],
+      'bank_offers': result_bank_offers,
     }
 
-    return render(request, 'application.html', context)
+    return render(request, 'bank_application.html', context)
 

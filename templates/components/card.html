@@ -2,17 +2,17 @@
 
 <div class="card">
     <div class="card-image-container">
-        <img src="{{ offer.imageUrl }}" alt="Image">
+        <img src="{{ bank_offer.imageUrl }}" alt="Image">
     </div>
 
     <div class="card-content">
         <div class="card-date">
-            <div class="card-title">{{ offer.name }}</div>
-            <div class="card-location">Обслуживание:&nbsp;{{ offer.subscription }}&nbsp;руб./мес.</div>
-            <div class="card-location">Кэшбэк до&nbsp;{{ offer.cashback }}%</div>
+            <div class="card-title">{{ bank_offer.name }}</div>
+            <div class="card-location">Обслуживание:&nbsp;{{ bank_offer.subscription }}&nbsp;руб./мес.</div>
+            <div class="card-location">Кэшбэк до&nbsp;{{ bank_offer.cashback }}%</div>
         </div>
 
-        <button class="card-button" onClick="location.href='{% url 'offer' offer_id=offer.id %}'">
+        <button class="card-button" onClick="location.href='{% url 'bank_offer' bank_offer_id=bank_offer.id %}'">
             Подробнее
         </button>
     </div>

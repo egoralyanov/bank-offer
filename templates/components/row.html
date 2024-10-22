@@ -1,11 +1,11 @@
 {% load static %}
 
-<a class="application-cell" href="{% url 'offer' offer_id=item.offer.id %}">
-    <img class="image" src="{{ item.offer.imageUrl }}" alt="Image">
+<a class="application-cell" href="{% url 'bank_offer' bank_offer_id=item.bank_offer.id %}">
+    <img class="image" src="{{ item.bank_offer.imageUrl }}" alt="Image">
     <div class="content">
-        <div class="card-title">{{ item.offer.name }}</div>
-        <div class="card-location">Обслуживание:&nbsp;{{ item.offer.subscription }}&nbsp;руб./мес.</div>
-        <div class="card-location">Кэшбэк до&nbsp;{{ item.offer.cashback }}%</div>
+        <div class="card-title">{{ item.bank_offer.name }}</div>
+        <div class="card-location">Обслуживание:&nbsp;{{ item.bank_offer.subscription }}&nbsp;руб./мес.</div>
+        <div class="card-location">Кэшбэк до&nbsp;{{ item.bank_offer.cashback }}%</div>
     </div>
     <div class="position-container">
         <div class="position">{{ item.index }}</div>

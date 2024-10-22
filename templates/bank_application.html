@@ -13,10 +13,10 @@
     <div class="title">Заявка #{{ id }}</div>
 </div>
 
-<input class="fio-input" type="text" placeholder="Введите ФИО" value="{{ fio }}">
+<input class="fio-input" type="text" placeholder="Введите ОГРН и название компании" value="{{ psrn_and_company_name }}">
 
 <div class="application-grid">
-{% for item in offers %}
+{% for item in bank_offers %}
 {% include 'components/row.html' %}
 {% endfor %}
 </div>
