@@ -8,6 +8,8 @@ from django.db import connection
 from django.contrib.auth.models import User
 from bank_app.models import BankOffer, BankApplication, Comment
 
+import random
+
 
 @require_GET
 def index(request):
@@ -60,7 +62,10 @@ def application(request, application_id):
     application_sections = []
     for priority in priorities:
       if priority.offer.is_deleted is False:
-        application_sections.append({ 'offer': priority.offer, 'comment': priority.comment })
+        comment = ""
+        if priority.comment != None:
+           comment = priority.comment
+        application_sections.append({ 'offer': priority.offer, 'comment': comment })
 
     psrn_and_company_name = ''
     if application.psrn_and_company_name is not None:
@@ -100,10 +105,10 @@ def add_offer(request, offer_id):
 @require_POST
 def set_application_deleted(request, application_id):
     application = BankApplication.objects.get(id=application_id)
-    priorities_counter = Comment.objects.filter(application=application).count()
+    Comment.objects.filter(application=application).update(account_number=''.join(random.choices('0123456789', k=20)))
 
     with connection.cursor() as cursor:
-        cursor.execute("UPDATE application SET status = 'deleted', number_of_services = %s WHERE id = %s", [priorities_counter, application_id])
+        cursor.execute("UPDATE application SET status = 'deleted' WHERE id = %s", [application_id])
         print("Заявка удалена.")
         
     return redirect('index')

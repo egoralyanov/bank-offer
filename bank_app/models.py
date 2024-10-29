@@ -8,14 +8,14 @@ class BankOffer(models.Model):
     bonus = models.CharField(max_length=200, default="Без бонусов", null=False)
     fact = models.CharField(max_length=100, default='Без факта', null=False)
     cost = models.IntegerField(default=5000, null=False)
-    imageUrl = models.URLField(null=False)
+    imageUrl = models.URLField(null=True, blank=True)
     is_deleted = models.BooleanField(default=False, null=False)
 
     class Meta:
         db_table = 'offer'
 
     def __str__(self):
-        return f"BankOffer '{self.id}':  '{self.name}'"
+        return f"BankOffer #'{self.id}':  '{self.name}'"
 
 
 class BankApplication(models.Model):
@@ -36,24 +36,25 @@ class BankApplication(models.Model):
     moderator = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='moderator')
 
     psrn_and_company_name = models.CharField(max_length=100, null=True, blank=True)
-    number_of_services = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'application'
 
     def __str__(self):
-        return f"Application '{self.id}' by '{self.user.username}' created at '{self.creation_date}'"
+        return f"BankApplication #'{self.id}' by '{self.user.username}'"
 
 
 class Comment(models.Model):
     application = models.ForeignKey(BankApplication, on_delete=models.CASCADE)
     offer = models.ForeignKey(BankOffer, on_delete=models.CASCADE)
 
-    comment = models.CharField(max_length=500, default="", null=False)
+    comment = models.CharField(max_length=500, null=True, blank=True)
+    account_number = models.CharField(null=True, blank=True)
+
 
     class Meta:
         db_table = 'comment'
         unique_together = ('application', 'offer')
 
     def __str__(self):
-        return f"Comment '{self.id}' in '{self.application}' of '{self.offer}' = '{self.comment}'"
+        return f"M-M #'{self.id}' in BankApplication #'{self.application}' of BankOffer #'{self.offer}': comment = '{self.comment}', account_number = '{self.account_number}'"
