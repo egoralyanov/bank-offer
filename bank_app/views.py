@@ -155,13 +155,15 @@ class ApplicationDetail(APIView):
 
         comments = Comment.objects.filter(application=application)
 
-        offers = []
+        offers_with_extra_data = []
         for comment in comments:
             if comment.offer.is_deleted == False:
-                offers.append(comment.offer)
-        serialized_offers = self.offer_serializer(offers, many=True)
+                offer_data = self.offer_serializer(comment.offer).data
+                offer_data['account_number'] = comment.account_number
+                offer_data['comment'] = comment.comment
+                offers_with_extra_data.append(offer_data)
 
-        return Response({'application': serializer.data, 'offers': serialized_offers.data})
+        return Response({'application': serializer.data, 'offers': offers_with_extra_data})
 
     def put(self, request, application_id, format=None):
         application = get_object_or_404(self.application_class, pk=application_id)
