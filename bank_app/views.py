@@ -151,8 +151,6 @@ class OfferList(APIView):
             user_instance = User.objects.filter(pk=user_id).first()
             if user_instance is not None:
                 draft_application = self.application_class.objects.filter(user=user_instance, status='draft').first()
-        else:
-            return Response(status=status.HTTP_403_FORBIDDEN)
 
         draft_application_id = None
         number_of_offers = None
