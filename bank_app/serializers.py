@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "password", "first_name", "last_name", "is_staff", "is_superuser"]
+        fields = ["pk", "username", "password", "first_name", "last_name", "is_staff", "is_superuser"]
 
 
 class BankOfferSerializer(serializers.ModelSerializer):

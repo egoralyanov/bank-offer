@@ -99,6 +99,30 @@ class UserViewSet(viewsets.ModelViewSet):
                                      is_staff=serializer.data['is_staff'])
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @swagger_auto_schema(
+        operation_summary="Обновление данных пользователя"
+    )
+    def update(self, request, *args, **kwargs):
+        """
+        Функция обновления данных существующего пользователя.
+        Обновляет информацию пользователя по ID, переданному в URL.
+        """
+        ssid = request.COOKIES.get("session_id")
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
+
+        serializer = self.serializer_class(instance=user_instance, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            if 'password' in request.data:
+                user_instance.set_password(request.data['password'])
+                user_instance.save()
+            updated_user = self.serializer_class(user_instance)
+
+            return Response(updated_user.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class OfferList(APIView):
@@ -180,7 +204,13 @@ class OfferDetail(APIView):
     serializer_class = BankOfferSerializer
 
     @swagger_auto_schema(
-        operation_summary="Одна банковская услуга"
+        operation_summary="Одна банковская услуга",
+        responses={
+            200: openapi.Response(
+                description="",
+                schema=BankOfferSerializer
+            )
+        }
     )
     def get(self, request, offer_id, format=None):
         offer = get_object_or_404(self.model_class, pk=offer_id)
@@ -245,7 +275,12 @@ class ApplicationList(APIView):
                 type=openapi.TYPE_STRING
             ),
             openapi.Parameter(
-                'apply_date',
+                'start_apply_date',
+                openapi.IN_QUERY,
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'end_apply_date',
                 openapi.IN_QUERY,
                 type=openapi.TYPE_STRING
             )
@@ -283,27 +318,31 @@ class ApplicationList(APIView):
     )
     def get(self, request, format=None):
         applications = None
+
         ssid = request.COOKIES.get("session_id")
-        if ssid is not None:
-            user_id = session_storage.get(ssid)
-            user_instance = User.objects.filter(pk=user_id).first()
-            if user_instance is not None:
-                if user_instance.is_staff:
-                    applications = self.model_class.objects.all().exclude(status__in=['deleted', 'draft'])
-                else:
-                    applications = self.model_class.objects.filter(user=user_instance).exclude(status__in=['deleted', 'draft'])
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
+
+        if user_instance.is_staff or user_instance.is_superuser:
+            applications = self.model_class.objects.all().exclude(status__in=['deleted', 'draft'])
         else:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            applications = self.model_class.objects.filter(user=user_instance).exclude(status__in=['deleted', 'draft'])
 
         query_status = request.query_params.get('status')
-        apply_date = request.query_params.get('apply_date')
+        start_apply_date = request.query_params.get('start_apply_date')
+        end_apply_date = request.query_params.get('end_apply_date')
 
         if query_status:
             applications = applications.filter(status=query_status)
-        if apply_date:
-            apply_date_datetime = timezone.datetime.fromisoformat(apply_date)
-            applications = applications.filter(apply_date__date=apply_date_datetime)
+        if start_apply_date:
+            start_apply_datetime = timezone.datetime.fromisoformat(start_apply_date)
+            applications = applications.filter(apply_date__date__gte=start_apply_datetime)
+        if end_apply_date:
+            end_apply_datetime = timezone.datetime.fromisoformat(end_apply_date)
+            applications = applications.filter(apply_date__date__lte=end_apply_datetime)
 
+        applications = applications.order_by('pk')
         serializer = self.serializer_class(applications, many=True)
         return Response({'applications': serializer.data})
 
@@ -323,26 +362,24 @@ class ApplicationList(APIView):
     )
     def post(self, request, format=None):
         draft_application = None
+
         ssid = request.COOKIES.get("session_id")
-        if ssid is not None:
-            user_id = session_storage.get(ssid)
-            user_instance = User.objects.filter(pk=user_id).first()
-            if user_instance is not None:
-                draft_application, created = BankApplication.objects.get_or_create(user=user_instance, status='draft', defaults={'creation_date': timezone.now})
-            else:
-                return Response({"error": "No such user"}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({"error": "ssid is nil or empty."}, status=status.HTTP_403_FORBIDDEN)
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
         
-        offer_id = request.data.get('offer_id')
-        offer = get_object_or_404(BankOffer, pk=offer_id, is_deleted=False)
+        draft_application, created = BankApplication.objects.get_or_create(user=user_instance, status='draft', defaults={'creation_date': timezone.now})
+        
+        section_id = request.data.get('section_id')
+        offer = get_object_or_404(BankOffer, pk=section_id, is_deleted=False)
 
         if Comment.objects.filter(application=draft_application, offer=offer):
-            return Response({"error": "Секция уже добавлена в текущую заявку"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Услуга уже добавлена в текущую заявку"}, status=status.HTTP_400_BAD_REQUEST)
 
+        current_priority = len(Comment.objects.filter(application=draft_application)) + 1
         Comment.objects.create(application=draft_application, offer=offer)
 
-        return Response({"message": "Секция добавлена в заявку"}, status=status.HTTP_201_CREATED)
+        return Response({"draft_application_id": draft_application.pk, "number_of_offers": current_priority}, status=status.HTTP_200_OK)
 
 
 class ApplicationDetail(APIView):
@@ -494,18 +531,42 @@ class ApplicationComment(APIView):
         operation_summary="Удалить услугу из заявки"
     )
     def delete(self, request, application_id, offer_id, format=None):
+        ssid = request.COOKIES.get("session_id")
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
+
         application = get_object_or_404(self.model_class, pk=application_id)
+
         offer = get_object_or_404(BankOffer, pk=offer_id)
         priority_to_delete = get_object_or_404(Comment, application=application, offer=offer)
         priority_to_delete.delete()
 
-        return Response({"message": "Услуга удалена из заявки"}, status=status.HTTP_204_NO_CONTENT)
+        serializer = BankApplicationSerializer(application)
+
+        sorted_comments = Comment.objects.filter(application=application).order_by('pk')
+        sorted_offers = []
+        for comment in sorted_comments:
+            if comment.offer.is_deleted == False:
+                sorted_offers.append(comment.offer)
+        serialized_offers = BankOfferSerializer(sorted_offers, many=True)
+
+        return Response({'application': serializer.data, 'offers': serialized_offers.data}, status=status.HTTP_200_OK)
     
     @swagger_auto_schema(
         operation_summary="Изменить комментарий к услуге в заявке"
     )
     def put(self, request, application_id, offer_id, format=None):
+        ssid = request.COOKIES.get("session_id")
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
+
         application = get_object_or_404(self.model_class, pk=application_id, status='draft')
+
+        if application.user != user_instance:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         offer = get_object_or_404(BankOffer, pk=offer_id)
         comment_value = request.data.get('comment')
 
@@ -513,4 +574,40 @@ class ApplicationComment(APIView):
         comment_to_change.comment = comment_value
         comment_to_change.save()
 
-        return Response({"message": "Комментарий изменен"}, status=status.HTTP_204_NO_CONTENT)
+        serializer = self.serializer_class(application)
+
+        comments = Comment.objects.filter(application=application)
+
+        offers_with_extra_data = []
+        for comment in comments:
+            if comment.offer.is_deleted == False:
+                offer_data = BankOfferSerializer(comment.offer).data
+                offer_data['account_number'] = comment.account_number
+                offer_data['comment'] = comment.comment
+                offers_with_extra_data.append(offer_data)
+
+        return Response({'application': serializer.data, 'offers': offers_with_extra_data}, status=status.HTTP_200_OK)
+    
+
+def get_user_from_session(ssid):
+    if ssid is None:
+        return None, Response(status=status.HTTP_403_FORBIDDEN)
+
+    user_id = session_storage.get(ssid)
+    user_instance = User.objects.filter(pk=user_id).first()
+
+    if user_instance is None:
+        return None, Response(status=status.HTTP_400_BAD_REQUEST)
+
+    return user_instance, None
+
+def get_moderator_from_session(ssid):
+    user_instance, error_response = get_user_from_session(ssid)
+
+    if error_response:
+        return None, error_response
+
+    if user_instance.is_staff or user_instance.is_superuser:
+        return user_instance, None
+
+    return None, Response(status=status.HTTP_403_FORBIDDEN)

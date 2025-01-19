@@ -39,8 +39,6 @@ urlpatterns = [
     # Домен услуги
     path(r'offers/', views.OfferList.as_view(), name='offers-list'),
     path(r'offers/<int:offer_id>/', views.OfferDetail.as_view(), name='offer-details'),
-    path(r'offers/<int:offer_id>/upload_image/', views.OfferDetail.as_view(), name='upload-offer-image'),
-    path(r'applications/draft/', views.ApplicationList.as_view(), name='add-to-draft'),
 
     # Домен заявки
     path(r'applications/', views.ApplicationList.as_view(), name='applications-list'),
