@@ -233,13 +233,23 @@ class OfferDetail(APIView):
         operation_summary="Удаление банковской услуги"
     )
     def delete(self, request, offer_id, format=None):
+        ssid = request.COOKIES.get("session_id")
+        moderator_instance, error_response = get_moderator_from_session(ssid)
+        if error_response:
+            return error_response
+
         offer = get_object_or_404(self.model_class, pk=offer_id)
         offer.is_deleted = True
         offer.save()
         pic_result = delete_pic(offer_id)
         if 'error' in pic_result.data:
             return pic_result
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        offers = BankOffer.objects.filter(is_deleted=False)
+        offers = offers.order_by('pk')   
+        serializer = BankOfferSerializer(offers, many=True)
+
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
     
     @swagger_auto_schema(
         operation_summary="Добавление изображения"
@@ -427,7 +437,18 @@ class ApplicationDetail(APIView):
         operation_summary="Изменение доп. полей заявки",
     )
     def put(self, request, application_id, format=None):
+        ssid = request.COOKIES.get("session_id")
+        user_instance, error_response = get_user_from_session(ssid)
+        if error_response:
+            return error_response
+
         application = get_object_or_404(self.application_class, pk=application_id)
+        if application.user != user_instance:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        if application.status != 'draft':
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         serializer = self.application_serializer(application, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -585,6 +606,8 @@ class ApplicationComment(APIView):
                 offer_data['account_number'] = comment.account_number
                 offer_data['comment'] = comment.comment
                 offers_with_extra_data.append(offer_data)
+
+        offers_with_extra_data = sorted(offers_with_extra_data, key=lambda d: d['pk'])
 
         return Response({'application': serializer.data, 'offers': offers_with_extra_data}, status=status.HTTP_200_OK)
     
