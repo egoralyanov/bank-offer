@@ -353,8 +353,14 @@ class ApplicationList(APIView):
             applications = applications.filter(apply_date__date__lte=end_apply_datetime)
 
         applications = applications.order_by('pk')
-        serializer = self.serializer_class(applications, many=True)
-        return Response({'applications': serializer.data})
+
+        applications_with_extra_data = []
+        for application in applications:
+            application_data = BankApplicationSerializer(application).data
+            application_data['offer_count'] = Comment.objects.filter(application=application, offer__is_deleted=False).count()
+            applications_with_extra_data.append(application_data)
+
+        return Response({'applications': applications_with_extra_data})
 
     @swagger_auto_schema(
         operation_summary="Добавление в заявку-черновик",
